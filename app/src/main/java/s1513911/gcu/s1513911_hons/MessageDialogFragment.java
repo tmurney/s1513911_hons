@@ -60,6 +60,7 @@ public class MessageDialogFragment extends AppCompatDialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getContext())
                 .setMessage(getArguments().getString(ARG_MESSAGE))
+                .setMessage(getArguments().getString(ARG_MESSAGE))
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

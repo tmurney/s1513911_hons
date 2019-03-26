@@ -15,8 +15,7 @@
   limitations under the License.
 -->
 <resources>
-    <string name="app_name">Speech</string>
-    <string name="permission_message">This app needs to record audio and recognize your speech.</string>
-    <string name="listening">Listening…</string>
-    <string name="load_file">Load file</string>
+    <string name="permission_message" translatable="false">This app needs to record audio and recognize your speech.</string>
+    <string name="listening" translatable="false">Listening…</string>
+    <string name="load_file" translatable="false">Load file</string>
 </resources>

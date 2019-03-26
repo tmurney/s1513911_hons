@@ -9,19 +9,27 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -30,7 +38,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     private static final String FRAGMENT_MESSAGE_DIALOG = "message_dialog";
 
-    private static final String STATE_RESULTS = "results";
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1;
 
@@ -71,16 +78,19 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     // View references
     private TextView mStatus;
     private TextView mText;
-    private ResultAdapter mAdapter;
-    private RecyclerView mRecyclerView;
+    private FloatingActionButton speechEnable;
+    private PopupWindow voiceInteract;
+    private LayoutInflater layoutInflater;
+    private CardView cardView;
 
+    private boolean isEnabled = false;
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder binder) {
             mSpeechService = SpeechService.from(binder);
             mSpeechService.addListener(mSpeechServiceListener);
-            mStatus.setVisibility(View.VISIBLE);
+
         }
 
         @Override
@@ -100,17 +110,31 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         mColorHearing = ResourcesCompat.getColor(resources, R.color.status_hearing, theme);
         mColorNotHearing = ResourcesCompat.getColor(resources, R.color.status_not_hearing, theme);
 
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         mStatus = (TextView) findViewById(R.id.status);
         mText = (TextView) findViewById(R.id.text);
+        cardView = (CardView) findViewById(R.id.card);
+        cardView.setVisibility(View.GONE);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        final ArrayList<String> results = savedInstanceState == null ? null :
-                savedInstanceState.getStringArrayList(STATE_RESULTS);
-        mAdapter = new ResultAdapter(results);
-        mRecyclerView.setAdapter(mAdapter);
+
+        speechEnable = (FloatingActionButton) findViewById(R.id.speechEnable);
+        speechEnable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(isEnabled){
+                    cardView.setVisibility(View.VISIBLE);
+                    mStatus.setVisibility(View.VISIBLE);
+                    mText.setVisibility(View.VISIBLE);
+                    startVoiceRecorder();
+
+                }
+
+            }
+
+        });
     }
+
+
 
     @Override
     protected void onStart() {
@@ -118,11 +142,11 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
         // Prepare Cloud Speech API
         bindService(new Intent(this, SpeechService.class), mServiceConnection, BIND_AUTO_CREATE);
-
         // Start listening to voices
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
-            startVoiceRecorder();
+            isEnabled = true;
+
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.RECORD_AUDIO)) {
             showPermissionMessageDialog();
@@ -130,6 +154,9 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
                     REQUEST_RECORD_AUDIO_PERMISSION);
         }
+
+
+
     }
 
     @Override
@@ -148,9 +175,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mAdapter != null) {
-            outState.putStringArrayList(STATE_RESULTS, mAdapter.getResults());
-        }
+
     }
 
     @Override
@@ -168,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
     }
 
-    @Override
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -183,7 +208,9 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
+    }*/
+
+
 
     private void startVoiceRecorder() {
         if (mVoiceRecorder != null) {
@@ -234,9 +261,9 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                             public void run() {
                                 if (isFinal) {
                                     mText.setText(null);
-                                    mAdapter.addResult(text);
-                                    mRecyclerView.smoothScrollToPosition(0);
-
+                                    cardView.setVisibility(View.GONE);
+                                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                                    stopVoiceRecorder();
 
                                 } else {
                                     mText.setText(text);
@@ -247,51 +274,8 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                 }
             };
 
-    private static class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView text;
 
-        ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.item_result, parent, false));
-            text = (TextView) itemView.findViewById(R.id.text);
-        }
 
-    }
-
-    private static class ResultAdapter extends RecyclerView.Adapter<ViewHolder> {
-
-        private final ArrayList<String> mResults = new ArrayList<>();
-
-        ResultAdapter(ArrayList<String> results) {
-            if (results != null) {
-                mResults.addAll(results);
-            }
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return new ViewHolder(LayoutInflater.from(parent.getContext()), parent);
-        }
-
-        @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.text.setText(mResults.get(position));
-        }
-
-        @Override
-        public int getItemCount() {
-            return mResults.size();
-        }
-
-        void addResult(String result) {
-            mResults.add(0, result);
-            notifyItemInserted(0);
-        }
-
-        public ArrayList<String> getResults() {
-            return mResults;
-        }
-
-    }
 
 }
