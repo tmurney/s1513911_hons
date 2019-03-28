@@ -15,19 +15,22 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+
 import android.view.View;
+
 import android.view.ViewGroup;
+
 import android.widget.Button;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     // View references
     private TextView mStatus;
     private TextView mText;
+
+    private Button navBackground;
+
     private FloatingActionButton speechEnable;
     private PopupWindow voiceInteract;
     private LayoutInflater layoutInflater;
@@ -115,6 +121,17 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         cardView = (CardView) findViewById(R.id.card);
         cardView.setVisibility(View.GONE);
 
+        navBackground = (Button) findViewById(R.id.navBackground);
+
+        navBackground.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //Function for navigating to the background; will also be used for voice commands.
+                openBackground();
+            }
+        });
+
 
         speechEnable = (FloatingActionButton) findViewById(R.id.speechEnable);
         speechEnable.setOnClickListener(new View.OnClickListener() {
@@ -134,6 +151,10 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         });
     }
 
+    public void openBackground(){
+        Intent intent = new Intent(this, appUniBg.class);
+        startActivity(intent);
+    }
 
 
     @Override
@@ -146,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
             isEnabled = true;
+            Toast.makeText(getApplicationContext(), "Voice Recognition Enabled", Toast.LENGTH_SHORT).show();
 
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.RECORD_AUDIO)) {

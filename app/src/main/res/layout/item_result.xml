@@ -23,7 +23,7 @@
     android:layout_height="wrap_content"
     android:theme="@style/ThemeOverlay.AppCompat.Light"
     app:cardCornerRadius="4dp"
-    app:cardElevation="1dp"
+    app:cardElevation="4dp"
     app:cardUseCompatPadding="true">
 
     <LinearLayout
@@ -53,7 +53,7 @@
             android:paddingTop="@dimen/spacing_small"
             android:paddingBottom="@dimen/spacing_small"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            tools:text="It is fine today." />
+            tools:text="Test" />
 
     </LinearLayout>
 

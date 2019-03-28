@@ -19,6 +19,10 @@
     <color name="primary_dark">#064E8A</color>
     <color name="accent">#536DFE</color>
 
+    <color name="button">#F44336</color>
+
+    <color name="ToolbarText">#FFFFFF</color>
+
     <color name="status_hearing">#3EF100</color>
     <color name="status_not_hearing">#757575</color>
 </resources>
