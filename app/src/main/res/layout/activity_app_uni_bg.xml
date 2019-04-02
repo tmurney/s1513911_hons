@@ -29,7 +29,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
+<<<<<<< HEAD
         android:text="its working!"
+=======
+        android:layout_marginBottom="332dp"
+        android:text=""
+>>>>>>> 74acad3aa5ed87ca5fdc1e4e75750f87c60d9f35
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
