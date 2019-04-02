@@ -21,6 +21,8 @@
 
     <color name="button">#F44336</color>
 
+
+    <color name="BigButtonText">#000000</color>
     <color name="ToolbarText">#FFFFFF</color>
 
     <color name="status_hearing">#3EF100</color>

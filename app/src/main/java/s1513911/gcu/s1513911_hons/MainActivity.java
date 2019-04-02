@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -29,6 +31,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 
 import android.widget.TextView;
@@ -40,18 +43,15 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements MessageDialogFragment.Listener {
 
     private static final String FRAGMENT_MESSAGE_DIALOG = "message_dialog";
-
-
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1;
 
     private SpeechService mSpeechService;
-
     private VoiceRecorder mVoiceRecorder;
+
     private final VoiceRecorder.Callback mVoiceCallback = new VoiceRecorder.Callback() {
 
         @Override
         public void onVoiceStart() {
-            showStatus(true);
             if (mSpeechService != null) {
                 mSpeechService.startRecognizing(mVoiceRecorder.getSampleRate());
             }
@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
         @Override
         public void onVoiceEnd() {
-            showStatus(false);
             if (mSpeechService != null) {
                 mSpeechService.finishRecognizing();
             }
@@ -74,22 +73,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     };
 
-    // Resource caches
-    private int mColorHearing;
-    private int mColorNotHearing;
-
-    // View references
-    private TextView mStatus;
-    private TextView mText;
-
-    private Button navBackground;
-
-    private FloatingActionButton speechEnable;
-    private PopupWindow voiceInteract;
-    private LayoutInflater layoutInflater;
-    private CardView cardView;
-
-    private boolean isEnabled = false;
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -106,6 +89,17 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     };
 
+    //
+    private ImageView logo;
+    private Button navBackground;
+    private Button navBuildings;
+    private Button navDepartments;
+    private Button navLibrary;
+    private Button navStudy;
+    boolean running;
+    String speechResult;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,15 +107,15 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
         final Resources resources = getResources();
         final Resources.Theme theme = getTheme();
-        mColorHearing = ResourcesCompat.getColor(resources, R.color.status_hearing, theme);
-        mColorNotHearing = ResourcesCompat.getColor(resources, R.color.status_not_hearing, theme);
 
-        mStatus = (TextView) findViewById(R.id.status);
-        mText = (TextView) findViewById(R.id.text);
-        cardView = (CardView) findViewById(R.id.card);
-        cardView.setVisibility(View.GONE);
+        logo = (ImageView) findViewById(R.id.logo);
+        logo.setImageResource(R.drawable.gcu);
 
         navBackground = (Button) findViewById(R.id.navBackground);
+        navBuildings = (Button) findViewById(R.id.navBuildings);
+        navDepartments = (Button) findViewById(R.id.navDepartments);
+        navLibrary = (Button) findViewById(R.id.navLibrary);
+        navStudy = (Button) findViewById(R.id.navStudy);
 
         navBackground.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -129,32 +123,17 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
                 //Function for navigating to the background; will also be used for voice commands.
                 openBackground();
+
             }
         });
 
 
-        speechEnable = (FloatingActionButton) findViewById(R.id.speechEnable);
-        speechEnable.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-                if(isEnabled){
-                    cardView.setVisibility(View.VISIBLE);
-                    mStatus.setVisibility(View.VISIBLE);
-                    mText.setVisibility(View.VISIBLE);
-                    startVoiceRecorder();
 
-                }
 
-            }
 
-        });
     }
 
-    public void openBackground(){
-        Intent intent = new Intent(this, appUniBg.class);
-        startActivity(intent);
-    }
 
 
     @Override
@@ -166,9 +145,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         // Start listening to voices
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
-            isEnabled = true;
-            Toast.makeText(getApplicationContext(), "Voice Recognition Enabled", Toast.LENGTH_SHORT).show();
-
+            startVoiceRecorder();
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.RECORD_AUDIO)) {
             showPermissionMessageDialog();
@@ -215,25 +192,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         }
     }
 
-    /*@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_file:
-                mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }*/
-
-
-
     private void startVoiceRecorder() {
         if (mVoiceRecorder != null) {
             mVoiceRecorder.stop();
@@ -255,14 +213,6 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                 .show(getSupportFragmentManager(), FRAGMENT_MESSAGE_DIALOG);
     }
 
-    private void showStatus(final boolean hearingVoice) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mStatus.setTextColor(hearingVoice ? mColorHearing : mColorNotHearing);
-            }
-        });
-    }
 
     @Override
     public void onMessageDialogDismissed() {
@@ -277,27 +227,114 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                     if (isFinal) {
                         mVoiceRecorder.dismiss();
                     }
-                    if (mText != null && !TextUtils.isEmpty(text)) {
-                        runOnUiThread(new Runnable() {
+
+                    runOnUiThread(new Runnable() { //Speech service runs in the background which requires to be brought to the UI thread
                             @Override
                             public void run() {
                                 if (isFinal) {
-                                    mText.setText(null);
-                                    cardView.setVisibility(View.GONE);
-                                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                                    stopVoiceRecorder();
 
-                                } else {
-                                    mText.setText(text);
+                                    speechResult = text;
+                                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                                    if(speechResult.equals("voice assist")){
+                                        running = true;
+                                        navBackground.setTextColor(getResources().getColor(R.color.status_hearing));
+                                        navBuildings.setTextColor(getResources().getColor(R.color.status_hearing));
+                                        navDepartments.setTextColor(getResources().getColor(R.color.status_hearing));
+                                        navLibrary.setTextColor(getResources().getColor(R.color.status_hearing));
+                                        navStudy.setTextColor(getResources().getColor(R.color.status_hearing));
+
+                                        MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.enabled);
+                                        mp.start();
+                                    }
+                                    if(running){
+                                        navigateApplication(speechResult);
+                                    }
+
+                                    if(speechResult.equals("help")){
+
+                                        MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.help);
+                                        mp.start();
+                                    }
+                                    if(speechResult.equals("stop") && running){
+                                        running = false;
+                                        navBackground.setTextColor(getResources().getColor(R.color.BigButtonText));
+                                        navBuildings.setTextColor(getResources().getColor(R.color.BigButtonText));
+                                        navDepartments.setTextColor(getResources().getColor(R.color.BigButtonText));
+                                        navLibrary.setTextColor(getResources().getColor(R.color.BigButtonText));
+                                        navStudy.setTextColor(getResources().getColor(R.color.BigButtonText));
+                                    }
+
+
                                 }
                             }
                         });
                     }
-                }
-            };
+                };
+
+
+    public void openBackground(){
+        Intent intent = new Intent(this, appUniBg.class);
+        startActivity(intent);
+
+        stopVoiceRecorder();
+
+
+
+
+    }
+
+    public void openBuildings(){
+        Intent intent = new Intent(this, appUniBuildings.class);
+        startActivity(intent);
+
+        stopVoiceRecorder();
+    }
+
+    public void openDepartments(){
+        Intent intent = new Intent(this, appUniDepartments.class);
+        startActivity(intent);
+
+        stopVoiceRecorder();
+
+    }
+
+    public void openLibrary(){
+        Intent intent = new Intent(this, appUniLibrary.class);
+        startActivity(intent);
+
+        stopVoiceRecorder();
+    }
+
+    public void openStudy(){
+        Intent intent = new Intent(this, appUniStudy.class);
+        startActivity(intent);
+
+        stopVoiceRecorder();
+    }
+
+
+    public void navigateApplication(String string){
+
+        if(string.contains("background")){
+            openBackground();
+        } else if (string.contains("buildings")){
+            openBuildings();
+        } else if (string.contains("departments")){
+            openDepartments();
+        } else if (string.contains("library")){
+            openLibrary();
+        } else if (string.contains("study areas")){
+            openStudy();
+        } else {
+            Toast.makeText(getApplicationContext(), "Try Again", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+            }
 
 
 
 
 
-}
+
