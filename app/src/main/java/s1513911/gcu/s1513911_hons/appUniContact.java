@@ -7,20 +7,17 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class appUniLibrary extends AppCompatActivity implements MessageDialogFragment.Listener {
+public class appUniContact extends AppCompatActivity implements MessageDialogFragment.Listener {
 
 
     /*Resource caches
@@ -91,19 +88,15 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
 
 
 
-    private TextView mLink;
     private boolean running = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_uni_library);
+        setContentView(R.layout.activity_app_uni_contact);
 
         final Resources resources = getResources();
         final Resources.Theme theme = getTheme();
-
-        mLink = (TextView) findViewById(R.id.librarylink);
-        mLink.setMovementMethod(LinkMovementMethod.getInstance());
 
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -137,9 +130,6 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
                     REQUEST_RECORD_AUDIO_PERMISSION);
         }
-
-        MediaPlayer mp = MediaPlayer.create(appUniLibrary.this, R.raw.library);
-        mp.start();
 
 
     }
@@ -200,16 +190,16 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
     }
 
 
-
-    public void openLink(){
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gcu.ac.uk/study/internationalstudents/facilitiessupport/thesaltirecentre/"));
-        startActivity(browserIntent);
+    @Override
+    public void onMessageDialogDismissed() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+                REQUEST_RECORD_AUDIO_PERMISSION);
     }
 
     public void readText(){
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  //This is a long reading which prevents the device from going into standby
         stopVoiceRecorder();
-        MediaPlayer mp = MediaPlayer.create(appUniLibrary.this, R.raw.libraryreading);
+        MediaPlayer mp = MediaPlayer.create(appUniContact.this, R.raw.contactreading);
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
 
             @Override
@@ -219,11 +209,6 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
 
         });
         mp.start();
-    }
-    @Override
-    public void onMessageDialogDismissed() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
-                REQUEST_RECORD_AUDIO_PERMISSION);
     }
 
     private final SpeechService.Listener mSpeechServiceListener =
@@ -242,7 +227,7 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
 
                                 String speechResult = text;
 
-                                MediaPlayer mp = MediaPlayer.create(appUniLibrary.this, R.raw.enabledshort);
+                                MediaPlayer mp = MediaPlayer.create(appUniContact.this, R.raw.enabledshort);
                                 mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
 
                                     @Override
@@ -253,12 +238,11 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
                                 });
 
 
-                                if(speechResult.equals("voice assist")){
+                                if(speechResult.equals("voice assist") ){
                                     running = true;
                                     stopVoiceRecorder();
                                     mp.start();
                                 }
-
 
                                 if(speechResult.equals("read this") && running){
                                     readText();
@@ -267,7 +251,7 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
 
                                 if(speechResult.equals("back") && running){
                                     stopVoiceRecorder();
-                                    MediaPlayer mpBack = MediaPlayer.create(appUniLibrary.this, R.raw.back);
+                                    MediaPlayer mpBack = MediaPlayer.create(appUniContact.this, R.raw.back);
                                     mpBack.start();
                                     finish();
                                 }
@@ -275,7 +259,7 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
                                 if(speechResult.equals("stop") && running){
                                     running = false;
                                     stopVoiceRecorder();
-                                    MediaPlayer mpStop = MediaPlayer.create(appUniLibrary.this, R.raw.stopping);
+                                    MediaPlayer mpStop = MediaPlayer.create(appUniContact.this, R.raw.stopping);
                                     mpStop.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
 
                                         @Override
@@ -286,11 +270,6 @@ public class appUniLibrary extends AppCompatActivity implements MessageDialogFra
                                     });
                                     mpStop.start();
                                 }
-
-                                if(speechResult.equals("open link") && running){
-                                    openLink();
-                                }
-
 
                             }
                         }

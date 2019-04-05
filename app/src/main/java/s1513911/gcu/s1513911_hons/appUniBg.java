@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -29,6 +30,7 @@ import android.view.View;
 
 import android.view.ViewGroup;
 
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.PopupWindow;
 
@@ -40,17 +42,6 @@ import java.util.ArrayList;
 public class appUniBg extends AppCompatActivity implements MessageDialogFragment.Listener {
 
 
-    /*Resource caches
-    private int mColorHearing;
-    private int mColorNotHearing;
-
-    private TextView mStatus;
-    private TextView mText;
-
-    private FloatingActionButton speechEnable;
-    private CardView cardView;
-
-*/
     private Toolbar mToolbar;
 
     private static final String FRAGMENT_MESSAGE_DIALOG = "message_dialog";
@@ -106,7 +97,7 @@ public class appUniBg extends AppCompatActivity implements MessageDialogFragment
 
     };
 
-
+    private boolean running = false;
 
 
 
@@ -150,6 +141,10 @@ public class appUniBg extends AppCompatActivity implements MessageDialogFragment
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
                     REQUEST_RECORD_AUDIO_PERMISSION);
         }
+
+
+        MediaPlayer mp = MediaPlayer.create(appUniBg.this, R.raw.background);
+        mp.start();
 
 
     }
@@ -216,6 +211,21 @@ public class appUniBg extends AppCompatActivity implements MessageDialogFragment
                 REQUEST_RECORD_AUDIO_PERMISSION);
     }
 
+    public void readText(){
+        stopVoiceRecorder();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        MediaPlayer mp = MediaPlayer.create(appUniBg.this, R.raw.backgroundreading);
+        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                startVoiceRecorder();
+            }
+
+        });
+        mp.start();
+    }
+
     private final SpeechService.Listener mSpeechServiceListener =
             new SpeechService.Listener() {
                 @Override
@@ -229,9 +239,51 @@ public class appUniBg extends AppCompatActivity implements MessageDialogFragment
                         public void run() {
                             if (isFinal) {
 
+                                String speechResult = text;
 
-                                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                                MediaPlayer mp = MediaPlayer.create(appUniBg.this, R.raw.enabledshort);
+                                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
 
+                                    @Override
+                                    public void onCompletion(MediaPlayer mp) {
+                                        startVoiceRecorder();
+                                    }
+
+                                });
+
+
+                                if(speechResult.equals("voice assist")){
+                                    running = true;
+                                    stopVoiceRecorder();
+                                    mp.start();
+                                }
+
+                                if(speechResult.equals("read this") && running){
+                                    Toast.makeText(getApplicationContext(), "reading", Toast.LENGTH_SHORT).show();
+                                    readText();
+                                }
+
+                                if(speechResult.equals("back") && running){
+                                    stopVoiceRecorder();
+                                    MediaPlayer mpBack = MediaPlayer.create(appUniBg.this, R.raw.back);
+                                    mpBack.start();
+                                    finish();
+                                }
+
+                                if(speechResult.equals("stop") && running){
+                                    running = false;
+                                    stopVoiceRecorder();
+                                    MediaPlayer mpStop = MediaPlayer.create(appUniBg.this, R.raw.stopping);
+                                    mpStop.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                                        @Override
+                                        public void onCompletion(MediaPlayer mp) {
+                                            startVoiceRecorder();
+                                        }
+
+                                    });
+                                    mpStop.start();
+                                }
 
                             }
                         }

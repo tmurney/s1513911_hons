@@ -11,33 +11,16 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-
-import android.text.TextUtils;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-
 import android.view.View;
-
-import android.view.ViewGroup;
-
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
-
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity implements MessageDialogFragment.Listener {
@@ -95,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     private Button navBuildings;
     private Button navDepartments;
     private Button navLibrary;
-    private Button navStudy;
+    private Button navContact;
+
     boolean running;
     String speechResult;
 
@@ -115,7 +99,8 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         navBuildings = (Button) findViewById(R.id.navBuildings);
         navDepartments = (Button) findViewById(R.id.navDepartments);
         navLibrary = (Button) findViewById(R.id.navLibrary);
-        navStudy = (Button) findViewById(R.id.navStudy);
+        navContact = (Button) findViewById(R.id.navContact);
+
 
         navBackground.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -127,14 +112,37 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
             }
         });
 
+        navBuildings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openBuildings();
+            }
+        });
 
+        navDepartments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openDepartments();
+            }
+        });
 
+        navLibrary.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openLibrary();
+            }
+        });
+
+        navContact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openContact();
+            }
+        });
 
 
 
     }
-
-
 
     @Override
     protected void onStart() {
@@ -145,7 +153,23 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         // Start listening to voices
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
-            startVoiceRecorder();
+            if(!running) {
+
+
+                MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.intro);
+                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        startVoiceRecorder();
+                    }
+
+                });
+                mp.start();
+            } else {
+                startVoiceRecorder();
+            }
+
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.RECORD_AUDIO)) {
             showPermissionMessageDialog();
@@ -234,34 +258,67 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                                 if (isFinal) {
 
                                     speechResult = text;
-                                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+
                                     if(speechResult.equals("voice assist")){
                                         running = true;
-                                        navBackground.setTextColor(getResources().getColor(R.color.status_hearing));
-                                        navBuildings.setTextColor(getResources().getColor(R.color.status_hearing));
-                                        navDepartments.setTextColor(getResources().getColor(R.color.status_hearing));
-                                        navLibrary.setTextColor(getResources().getColor(R.color.status_hearing));
-                                        navStudy.setTextColor(getResources().getColor(R.color.status_hearing));
 
+                                        navBackground.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.status_hearing));
+                                        navBuildings.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.status_hearing));
+                                        navDepartments.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.status_hearing));
+                                        navLibrary.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.status_hearing));
+                                        navContact.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.status_hearing));
+
+
+                                        stopVoiceRecorder();
+                                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                                         MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.enabled);
+                                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                                            @Override
+                                            public void onCompletion(MediaPlayer mp) {
+                                                startVoiceRecorder();
+                                            }
+
+                                        });
                                         mp.start();
                                     }
                                     if(running){
                                         navigateApplication(speechResult);
                                     }
 
-                                    if(speechResult.equals("help")){
-
+                                    if(speechResult.equals("help") && running){
+                                        stopVoiceRecorder();
                                         MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.help);
+                                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                                            @Override
+                                            public void onCompletion(MediaPlayer mp) {
+                                               startVoiceRecorder();
+                                            }
+
+                                        });
                                         mp.start();
                                     }
                                     if(speechResult.equals("stop") && running){
                                         running = false;
-                                        navBackground.setTextColor(getResources().getColor(R.color.BigButtonText));
-                                        navBuildings.setTextColor(getResources().getColor(R.color.BigButtonText));
-                                        navDepartments.setTextColor(getResources().getColor(R.color.BigButtonText));
-                                        navLibrary.setTextColor(getResources().getColor(R.color.BigButtonText));
-                                        navStudy.setTextColor(getResources().getColor(R.color.BigButtonText));
+
+                                        stopVoiceRecorder();
+                                        MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.stopping);
+                                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                                            @Override
+                                            public void onCompletion(MediaPlayer mp) {
+                                                startVoiceRecorder();
+                                            }
+
+                                        });
+                                        mp.start();
+                                        navBackground.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BigButtonText));
+                                        navBuildings.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BigButtonText));
+                                        navDepartments.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BigButtonText));
+                                        navLibrary.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BigButtonText));
+                                        navContact.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.BigButtonText));
+
                                     }
 
 
@@ -275,25 +332,19 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     public void openBackground(){
         Intent intent = new Intent(this, appUniBg.class);
         startActivity(intent);
-
         stopVoiceRecorder();
-
-
-
 
     }
 
     public void openBuildings(){
         Intent intent = new Intent(this, appUniBuildings.class);
         startActivity(intent);
-
         stopVoiceRecorder();
     }
 
     public void openDepartments(){
         Intent intent = new Intent(this, appUniDepartments.class);
         startActivity(intent);
-
         stopVoiceRecorder();
 
     }
@@ -301,37 +352,57 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     public void openLibrary(){
         Intent intent = new Intent(this, appUniLibrary.class);
         startActivity(intent);
-
         stopVoiceRecorder();
     }
 
-    public void openStudy(){
-        Intent intent = new Intent(this, appUniStudy.class);
+    public void openContact(){
+        Intent intent = new Intent(this, appUniContact.class);
         startActivity(intent);
-
         stopVoiceRecorder();
     }
 
 
     public void navigateApplication(String string){
 
+
+        MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.opening);
+        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                startVoiceRecorder();
+            }
+
+        });
+
+
+
         if(string.contains("background")){
+
+            mp.start();
             openBackground();
         } else if (string.contains("buildings")){
+
+            mp.start();
             openBuildings();
         } else if (string.contains("departments")){
+
+            mp.start();
             openDepartments();
         } else if (string.contains("library")){
+
+            mp.start();
             openLibrary();
-        } else if (string.contains("study areas")){
-            openStudy();
-        } else {
-            Toast.makeText(getApplicationContext(), "Try Again", Toast.LENGTH_SHORT).show();
+        } else if (string.contains("contact")){
+
+            mp.start();
+            openContact();
+
         }
 
 
     }
-            }
+}
 
 
 

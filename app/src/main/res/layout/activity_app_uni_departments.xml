@@ -12,7 +12,7 @@
         android:layout_width="414dp"
         android:layout_height="53dp"
         android:layout_marginBottom="8dp"
-
+        android:elevation="10dp"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
@@ -23,19 +23,62 @@
         app:title="Departments"
         app:titleTextColor="@color/ToolbarText" />
 
-    <TextView
-        android:id="@+id/textView"
+    <ScrollView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="550dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="its working!"
+        android:layout_marginBottom="8dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        app:layout_constraintVertical_bias="0.0">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="@string/department_info"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="88dp" />
+            <TextView
+                android:id="@+id/linkforCEBE"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="@string/CEBELink"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="88dp" />
+            <TextView
+                android:id="@+id/linkforBusiness"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="@string/BusinessLink"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="88dp" />
+            <TextView
+                android:id="@+id/linkforHealth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="@string/HealthLink"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="88dp" />
+        </LinearLayout>
 
 
+    </ScrollView>
 
 
 </android.support.constraint.ConstraintLayout>

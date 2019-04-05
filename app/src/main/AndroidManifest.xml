@@ -12,15 +12,22 @@
         android:icon="@mipmap/ic_launcher"
         android:label="GCU INFO"
         android:supportsRtl="true"
-
         android:theme="@style/Theme.Speech"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".appUniDepartments"></activity>
-        <activity android:name=".appUniStudy" />
-        <activity android:name=".appUniLibrary" />
-        <activity android:name=".appUniBuildings" />
-        <activity android:name=".appUniBg" android:noHistory="true"/>
-        <activity android:name=".MainActivity" >
+        <activity android:name=".appUniContact"></activity>
+        <activity
+            android:name=".appUniDepartments"
+            android:noHistory="true" />
+        <activity
+            android:name=".appUniLibrary"
+            android:noHistory="true" />
+        <activity
+            android:name=".appUniBuildings"
+            android:noHistory="true" />
+        <activity
+            android:name=".appUniBg"
+            android:noHistory="true" />
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
